@@ -3,12 +3,12 @@ using JLD2
 using WriteVTK
 
 global NG::Int64 = 4
-global Nx::Int64 = 512 #include ghost cell
-global Ny::Int64 = 256 #include ghost cell
+global Nx::Int64 = 1024
+global Ny::Int64 = 256
 global Lx_flat::Float64 = 1.0
-global Lx_corner::Float64 = 0.5
+global Lx_corner::Float64 = 1.0
 global y1::Float64 = 0.00001
-global θ::Float64 = 24/180*π
+global θ::Float64 = 0/180*π
 global Nx_tot::Int64 = Nx + 2*NG
 global Ny_tot::Int64 = Ny + 2*NG
 
