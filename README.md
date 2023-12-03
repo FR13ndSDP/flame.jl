@@ -7,8 +7,8 @@ Toy code for compression corner with lux NN model for real gas and chemical reac
 - `Lux.jl` trained model combined with `Cantera`
 
 ## Roadmap
-- [ ] Proper viscous
-- [ ] Shared memory optimization
+- [x] Proper viscous
+- [ ] Shuffle and stream optimization
 - [ ] Species transport
 - [ ] Integrate Cantera and Lux
 - [ ] 3D and MPI
