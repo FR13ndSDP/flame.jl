@@ -1,5 +1,5 @@
 @inline function minmod(a, b)
-    ifelse(a*b > 0, (CUDA.abs(a) > CUDA.abs(b)) ? b : a, 0)
+    ifelse(a*b > 0, (CUDA.abs(a) > CUDA.abs(b)) ? b : a, zero(a))
 end
 
 #Range: 1 -> N-1
@@ -42,7 +42,7 @@ function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
         return
     end
 
-    eps::Float64 = 1e-20
+    eps::Float64 = CUDA.eps(Float64)
     tmp1::Float64 = 13/12
     tmp2::Float64 = 1/6
 
@@ -53,17 +53,17 @@ function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
         @inbounds V4 = Fp[i+1+NG, j+1+NG, n]
         @inbounds V5 = Fp[i+2+NG, j+1+NG, n]
         # FP
-        s11 = tmp1*(V1-2*V2+V3)*(V1-2*V2+V3) + 0.25*(V1-4*V2+3*V3)*(V1-4*V2+3*V3)
-        s22 = tmp1*(V2-2*V3+V4)*(V2-2*V3+V4) + 0.25*(V2-V4)*(V2-V4)
-        s33 = tmp1*(V3-2*V4+V5)*(V3-2*V4+V5) + 0.25*(3*V3-4*V4+V5)*(3*V3-4*V4+V5)
+        s11 = tmp1*(V1-2*V2+V3)^2 + 0.25*(V1-4*V2+3*V3)^2
+        s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V2-V4)^2
+        s33 = tmp1*(V3-2*V4+V5)^2 + 0.25*(3*V3-4*V4+V5)^2
 
-        τ = abs(s11-s33)
-        # s11 = 1/((eps+s11) * (eps+s11))
-        # s22 = 1/((eps+s22) * (eps+s22))
-        # s33 = 1/((eps+s33) * (eps+s33))
-        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        # τ = abs(s11-s33)
+        s11 = 1/(eps+s11)^2
+        s22 = 1/(eps+s22)^2
+        s33 = 1/(eps+s33)^2
+        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22
@@ -81,17 +81,17 @@ function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
         @inbounds V4 = Fm[i+2+NG, j+1+NG, n]
         @inbounds V5 = Fm[i+3+NG, j+1+NG, n]
         # FM
-        s11 = tmp1*(V5-2*V4+V3)*(V5-2*V4+V3) + 0.25*(V5-4*V4+3*V3)*(V5-4*V4+3*V3)
-        s22 = tmp1*(V2-2*V3+V4)*(V2-2*V3+V4) + 0.25*(V4-V2)*(V4-V2)
-        s33 = tmp1*(V3-2*V2+V1)*(V3-2*V2+V1) + 0.25*(3*V3-4*V2+V1)*(3*V3-4*V2+V1)
+        s11 = tmp1*(V5-2*V4+V3)^2 + 0.25*(V5-4*V4+3*V3)^2
+        s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V4-V2)^2
+        s33 = tmp1*(V3-2*V2+V1)^2 + 0.25*(3*V3-4*V2+V1)^2
 
-        τ = abs(s11-s33)
-        # s11 = 1/((eps+s11) * (eps+s11))
-        # s22 = 1/((eps+s22) * (eps+s22))
-        # s33 = 1/((eps+s33) * (eps+s33))
-        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        # τ = abs(s11-s33)
+        s11 = 1/(eps+s11)^2
+        s22 = 1/(eps+s22)^2
+        s33 = 1/(eps+s33)^2
+        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22
@@ -117,7 +117,7 @@ function WENO_y!(F, Fp, Fm, NG, Nx, Ny)
         return
     end
 
-    eps::Float64 = 1e-20
+    eps::Float64 = CUDA.eps(Float64)
     tmp1::Float64 = 13/12
     tmp2::Float64 = 1/6
 
@@ -128,17 +128,17 @@ function WENO_y!(F, Fp, Fm, NG, Nx, Ny)
         @inbounds V4 = Fp[i+1+NG, j+1+NG, n]
         @inbounds V5 = Fp[i+1+NG, j+2+NG, n]
         # FP
-        s11 = tmp1*(V1-2*V2+V3)*(V1-2*V2+V3) + 0.25*(V1-4*V2+3*V3)*(V1-4*V2+3*V3)
-        s22 = tmp1*(V2-2*V3+V4)*(V2-2*V3+V4) + 0.25*(V2-V4)*(V2-V4)
-        s33 = tmp1*(V3-2*V4+V5)*(V3-2*V4+V5) + 0.25*(3*V3-4*V4+V5)*(3*V3-4*V4+V5)
+        s11 = tmp1*(V1-2*V2+V3)^2 + 0.25*(V1-4*V2+3*V3)^2
+        s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V2-V4)^2
+        s33 = tmp1*(V3-2*V4+V5)^2 + 0.25*(3*V3-4*V4+V5)^2
 
-        τ = abs(s11-s33)
-        # s11 = 1/((eps+s11) * (eps+s11))
-        # s22 = 1/((eps+s22) * (eps+s22))
-        # s33 = 1/((eps+s33) * (eps+s33))
-        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        # τ = abs(s11-s33)
+        s11 = 1/(eps+s11)^2
+        s22 = 1/(eps+s22)^2
+        s33 = 1/(eps+s33)^2
+        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22
@@ -156,17 +156,17 @@ function WENO_y!(F, Fp, Fm, NG, Nx, Ny)
         @inbounds V4 = Fm[i+1+NG, j+2+NG, n]
         @inbounds V5 = Fm[i+1+NG, j+3+NG, n]
         # FM
-        s11 = tmp1*(V5-2*V4+V3)*(V5-2*V4+V3) + 0.25*(V5-4*V4+3*V3)*(V5-4*V4+3*V3)
-        s22 = tmp1*(V2-2*V3+V4)*(V2-2*V3+V4) + 0.25*(V4-V2)*(V4-V2)
-        s33 = tmp1*(V3-2*V2+V1)*(V3-2*V2+V1) + 0.25*(3*V3-4*V2+V1)*(3*V3-4*V2+V1)
+        s11 = tmp1*(V5-2*V4+V3)^2 + 0.25*(V5-4*V4+3*V3)^2
+        s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V4-V2)^2
+        s33 = tmp1*(V3-2*V2+V1)^2 + 0.25*(3*V3-4*V2+V1)^2
 
-        τ = abs(s11-s33)
-        # s11 = 1/((eps+s11) * (eps+s11))
-        # s22 = 1/((eps+s22) * (eps+s22))
-        # s33 = 1/((eps+s33) * (eps+s33))
-        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        # τ = abs(s11-s33)
+        s11 = 1/(eps+s11)^2
+        s22 = 1/(eps+s22)^2
+        s33 = 1/(eps+s33)^2
+        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22

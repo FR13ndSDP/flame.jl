@@ -96,9 +96,10 @@ end
 
 
 function RHS(U, Q, Fp_x, Fm_x, Fp_y, Fm_y, Fx, Fy, Fv_x, Fv_y, Nx, Ny, NG, dξdx, dξdy, dηdx, dηdy, J)
-    nthreads = (16, 16)
+    nthreads = (16, 16, 1)
     nblock = (cld((Nx+2*NG), 16), 
-              cld((Ny+2*NG), 16))
+              cld((Ny+2*NG), 16),
+              1)
 
     # local constants
     gamma::Float64 = 1.4
@@ -117,10 +118,10 @@ function RHS(U, Q, Fp_x, Fm_x, Fp_y, Fm_y, Fx, Fy, Fv_x, Fv_y, Nx, Ny, NG, dξdx
     @cuda fastmath=true threads=nthreads blocks=nblock c2Prim!(U, Q, Nx, Ny, NG, gamma, Rg)
 
     @cuda fastmath=true threads=nthreads blocks=nblock fluxSplit!(Q, Fp_x, Fm_x, Nx, Ny, NG, dξdx, dξdy, gamma, tmp0, split_C1, split_C3)
-    @cuda fastmath=true threads=nthreads blocks=nblock WENO_x!(Fx, Fp_x, Fm_x, NG, Nx, Ny)
+    @cuda fastmath=true maxregs=32 threads=nthreads blocks=nblock WENO_x!(Fx, Fp_x, Fm_x, NG, Nx, Ny)
 
     @cuda fastmath=true threads=nthreads blocks=nblock fluxSplit!(Q, Fp_y, Fm_y, Nx, Ny, NG, dηdx, dηdy, gamma, tmp0, split_C1, split_C3)
-    @cuda fastmath=true threads=nthreads blocks=nblock WENO_y!(Fy, Fp_y, Fm_y, NG, Nx, Ny)
+    @cuda fastmath=true maxregs=32 threads=nthreads blocks=nblock WENO_y!(Fy, Fp_y, Fm_y, NG, Nx, Ny)
 
     @cuda fastmath=true threads=nthreads blocks=nblock viscousFlux!(Fv_x, Fv_y, Q, NG, Nx, Ny, Pr, Cp, C_s, T_s, dξdx, dξdy, dηdx, dηdy, J)
 end
@@ -139,9 +140,10 @@ function time_step!(U, Time, dt, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG)
     Fv_x = CuArray(zeros(Float64, Nx_tot-4, Ny_tot-4, 3))
     Fv_y = CuArray(zeros(Float64, Nx_tot-4, Ny_tot-4, 3))
 
-    nthreads = (16, 16)
+    nthreads = (16, 16, 1)
     nblock = (cld((Nx+2*NG), 16), 
-              cld((Ny+2*NG), 16))
+              cld((Ny+2*NG), 16),
+              1)
 
     for tt = 1:cld(Time, dt)
         if tt % 100 == 0
