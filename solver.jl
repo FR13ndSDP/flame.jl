@@ -129,16 +129,16 @@ end
 function time_step!(U, Time, dt, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG)
     Nx_tot = Nx+2*NG
     Ny_tot = Ny+2*NG
-    Un = CuArray(zeros(Float64, Nx_tot, Ny_tot, 4))
-    Q = CuArray(zeros(Float64, Nx_tot, Ny_tot, 6))
-    Fp_x = CuArray(zeros(Float64, Nx_tot, Ny_tot, 4))
-    Fm_x = CuArray(zeros(Float64, Nx_tot, Ny_tot, 4))
-    Fp_y = CuArray(zeros(Float64, Nx_tot, Ny_tot, 4))
-    Fm_y = CuArray(zeros(Float64, Nx_tot, Ny_tot, 4))
-    Fx = CuArray(zeros(Float64, Nx-1, Ny-2, 4))
-    Fy = CuArray(zeros(Float64, Nx-2, Ny-1, 4))
-    Fv_x = CuArray(zeros(Float64, Nx_tot-4, Ny_tot-4, 3))
-    Fv_y = CuArray(zeros(Float64, Nx_tot-4, Ny_tot-4, 3))
+    Un =   CUDA.zeros(Float64, Nx_tot, Ny_tot, 4)
+    Q =    CUDA.zeros(Float64, Nx_tot, Ny_tot, 6)
+    Fp_x = CUDA.zeros(Float64, Nx_tot, Ny_tot, 4)
+    Fm_x = CUDA.zeros(Float64, Nx_tot, Ny_tot, 4)
+    Fp_y = CUDA.zeros(Float64, Nx_tot, Ny_tot, 4)
+    Fm_y = CUDA.zeros(Float64, Nx_tot, Ny_tot, 4)
+    Fx =   CUDA.zeros(Float64, Nx-1, Ny-2, 4)
+    Fy =   CUDA.zeros(Float64, Nx-2, Ny-1, 4)
+    Fv_x = CUDA.zeros(Float64, Nx_tot-4, Ny_tot-4, 3)
+    Fv_y = CUDA.zeros(Float64, Nx_tot-4, Ny_tot-4, 3)
 
     nthreads = (16, 16, 1)
     nblock = (cld((Nx+2*NG), 16), 
@@ -151,7 +151,7 @@ function time_step!(U, Time, dt, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG)
             print("$tt")
             printstyled("\tTime: ", color=:blue)
             println("$(tt*dt)")
-            if any(isnan, U_gpu)
+            if any(isnan, U)
                 printstyled("Oops, NaN detected\n", color=:red)
                 return
             end
