@@ -3,14 +3,14 @@
 end
 
 #Range: 1 -> N-1
-function NND_x!(F, Fp, Fm, NG, Nx, Ny)
+function NND_x(F, Fp, Fm, NG, Nx, Ny, NV)
     i = (blockIdx().x-1)* blockDim().x + threadIdx().x
     j = (blockIdx().y-1)* blockDim().y + threadIdx().y
 
     if i > Nx-1 || j > Ny-2
         return
     end
-    for n = 1:4
+    for n = 1:NV
         @inbounds fp = Fp[i+NG, j+1+NG, n] + 0.5*minmod(Fp[i+1+NG, j+1+NG, n]-Fp[i+NG, j+1+NG, n], Fp[i+NG, j+1+NG, n] - Fp[i-1+NG, j+1+NG, n])
         @inbounds fm = Fm[i+1+NG, j+1+NG, n] - 0.5*minmod(Fm[i+2+NG, j+1+NG, n]-Fm[i+1+NG, j+1+NG, n], Fm[i+1+NG, j+1+NG, n] - Fm[i+NG, j+1+NG, n])
         @inbounds F[i, j, n] = fp + fm
@@ -18,14 +18,14 @@ function NND_x!(F, Fp, Fm, NG, Nx, Ny)
     return
 end
 
-function NND_y!(F, Fp, Fm, NG, Nx, Ny)
+function NND_y(F, Fp, Fm, NG, Nx, Ny, NV)
     i = (blockIdx().x-1)* blockDim().x + threadIdx().x
     j = (blockIdx().y-1)* blockDim().y + threadIdx().y
 
     if i > Nx-2 || j > Ny-1
         return
     end
-    for n = 1:4
+    for n = 1:NV
         @inbounds fp = Fp[i+1+NG, j+NG, n] + 0.5*minmod(Fp[i+1+NG, j+1+NG, n]-Fp[i+1+NG, j+NG, n], Fp[i+1+NG, j+NG, n] - Fp[i+1+NG, j-1+NG, n])
         @inbounds fm = Fm[i+1+NG, j+1+NG, n] - 0.5*minmod(Fm[i+1+NG, j+2+NG, n]-Fm[i+1+NG, j+1+NG, n], Fm[i+1+NG, j+1+NG, n] - Fm[i+1+NG, j+NG, n])
         @inbounds F[i, j, n] = fp + fm
@@ -34,7 +34,7 @@ function NND_y!(F, Fp, Fm, NG, Nx, Ny)
 end
 
 #Range: 1 -> N-1
-function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
+function WENO_x(F, Fp, Fm, NG, Nx, Ny, NV)
     i = (blockIdx().x-1)* blockDim().x + threadIdx().x
     j = (blockIdx().y-1)* blockDim().y + threadIdx().y
 
@@ -46,7 +46,7 @@ function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
     tmp1::Float64 = 13/12
     tmp2::Float64 = 1/6
 
-    for n = 1:4
+    for n = 1:NV
         @inbounds V1 = Fp[i-2+NG, j+1+NG, n]
         @inbounds V2 = Fp[i-1+NG, j+1+NG, n]
         @inbounds V3 = Fp[i+NG,   j+1+NG, n]
@@ -57,13 +57,13 @@ function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V2-V4)^2
         s33 = tmp1*(V3-2*V4+V5)^2 + 0.25*(3*V3-4*V4+V5)^2
 
-        # τ = abs(s11-s33)
-        s11 = 1/(eps+s11)^2
-        s22 = 1/(eps+s22)^2
-        s33 = 1/(eps+s33)^2
-        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        τ = abs(s11-s33)
+        # s11 = 1/(eps+s11)^2
+        # s22 = 1/(eps+s22)^2
+        # s33 = 1/(eps+s33)^2
+        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22
@@ -85,13 +85,13 @@ function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V4-V2)^2
         s33 = tmp1*(V3-2*V2+V1)^2 + 0.25*(3*V3-4*V2+V1)^2
 
-        # τ = abs(s11-s33)
-        s11 = 1/(eps+s11)^2
-        s22 = 1/(eps+s22)^2
-        s33 = 1/(eps+s33)^2
-        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        τ = abs(s11-s33)
+        # s11 = 1/(eps+s11)^2
+        # s22 = 1/(eps+s22)^2
+        # s33 = 1/(eps+s33)^2
+        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22
@@ -109,7 +109,7 @@ function WENO_x!(F, Fp, Fm, NG, Nx, Ny)
 end
 
 #Range: 1 -> N-1
-function WENO_y!(F, Fp, Fm, NG, Nx, Ny)
+function WENO_y(F, Fp, Fm, NG, Nx, Ny, NV)
     i = (blockIdx().x-1)* blockDim().x + threadIdx().x
     j = (blockIdx().y-1)* blockDim().y + threadIdx().y
 
@@ -121,7 +121,7 @@ function WENO_y!(F, Fp, Fm, NG, Nx, Ny)
     tmp1::Float64 = 13/12
     tmp2::Float64 = 1/6
 
-    for n = 1:4
+    for n = 1:NV
         @inbounds V1 = Fp[i+1+NG, j-2+NG, n]
         @inbounds V2 = Fp[i+1+NG, j-1+NG, n]
         @inbounds V3 = Fp[i+1+NG, j+NG,   n]
@@ -132,13 +132,13 @@ function WENO_y!(F, Fp, Fm, NG, Nx, Ny)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V2-V4)^2
         s33 = tmp1*(V3-2*V4+V5)^2 + 0.25*(3*V3-4*V4+V5)^2
 
-        # τ = abs(s11-s33)
-        s11 = 1/(eps+s11)^2
-        s22 = 1/(eps+s22)^2
-        s33 = 1/(eps+s33)^2
-        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        τ = abs(s11-s33)
+        # s11 = 1/(eps+s11)^2
+        # s22 = 1/(eps+s22)^2
+        # s33 = 1/(eps+s33)^2
+        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22
@@ -160,13 +160,13 @@ function WENO_y!(F, Fp, Fm, NG, Nx, Ny)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V4-V2)^2
         s33 = tmp1*(V3-2*V2+V1)^2 + 0.25*(3*V3-4*V2+V1)^2
 
-        # τ = abs(s11-s33)
-        s11 = 1/(eps+s11)^2
-        s22 = 1/(eps+s22)^2
-        s33 = 1/(eps+s33)^2
-        # s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
-        # s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
-        # s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
+        τ = abs(s11-s33)
+        # s11 = 1/(eps+s11)^2
+        # s22 = 1/(eps+s22)^2
+        # s33 = 1/(eps+s33)^2
+        s11 = 1 + (τ/(eps+s11)) * (τ/(eps+s11))
+        s22 = 1 + (τ/(eps+s22)) * (τ/(eps+s22))
+        s33 = 1 + (τ/(eps+s33)) * (τ/(eps+s33))
 
         a1 = s11
         a2 = 6*s22

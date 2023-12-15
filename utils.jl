@@ -1,5 +1,8 @@
+include("reaction.jl")
+using StaticArrays
+
 # Range: 1 -> N+2*NG
-function c2Prim!(U, Q, Nx, Ny, NG, gamma, Rg)
+function c2Prim(U, Q, Nx, Ny, NG, gamma, Rg)
     i = (blockIdx().x-1)* blockDim().x + threadIdx().x
     j = (blockIdx().y-1)* blockDim().y + threadIdx().y
     if i > Nx+2*NG || j > Ny+2*NG
@@ -22,27 +25,27 @@ function c2Prim!(U, Q, Nx, Ny, NG, gamma, Rg)
     return
 end
 
-function copyOld!(Un, U, Nx, Ny, NG)
+function copyOld(Un, U, Nx, Ny, NG, NV)
     i = (blockIdx().x-1)* blockDim().x + threadIdx().x
     j = (blockIdx().y-1)* blockDim().y + threadIdx().y
 
     if i > Nx+2*NG || j > Ny+2*NG
         return
     end
-    for n = 1:4
+    for n = 1:NV
         Un[i, j, n] = U[i, j, n]
     end
     return
 end
 
-function linComb!(U, Un, Nx, Ny, NG, a::Float64, b::Float64)
+function linComb(U, Un, Nx, Ny, NG, NV, a::Float64, b::Float64)
     i = (blockIdx().x-1)* blockDim().x + threadIdx().x
     j = (blockIdx().y-1)* blockDim().y + threadIdx().y
 
     if i > Nx+2*NG || j > Ny+2*NG
         return
     end
-    for n = 1:4
+    for n = 1:NV
         U[i, j, n] = U[i, j, n] * a + Un[i, j, n] * b
     end
     return

@@ -1,33 +1,22 @@
-# Mesh for wedge with ghost cell
+# Mesh for flat plate
 using JLD2
 using WriteVTK
 
 global NG::Int64 = 4
 global Nx::Int64 = 1024
 global Ny::Int64 = 256
-global Lx_flat::Float64 = 1.0
-global Lx_corner::Float64 = 1.0
-global y1::Float64 = 0.00001
-global θ::Float64 = 0/180*π
+global Lx::Float64 = 1
+global Ly::Float64 = 0.1
 global Nx_tot::Int64 = Nx + 2*NG
 global Ny_tot::Int64 = Ny + 2*NG
 
 x = zeros(Float64, Nx_tot, Ny_tot)
 y = zeros(Float64, Nx_tot, Ny_tot)
 
-midpoint = cld(Nx, 2)
-
-for i = 1:midpoint
+for i = 1:Nx
     for j = 1:Ny
-        x[i+NG, j+NG] = (i-1) * (Lx_flat/(midpoint-1)) - Lx_flat
-        y[i+NG, j+NG] = j*(j-1)/2 * y1
-    end
-end
-
-for i = midpoint+1:Nx
-    for j = 1:Ny
-        x[i+NG, j+NG] = (i - midpoint) * (Lx_corner/(Nx-midpoint)) * cos(θ)
-        y[i+NG, j+NG] = (i - midpoint) * (Lx_corner/(Nx-midpoint)) * sin(θ) + j*(j-1)/2*y1
+        x[i+NG, j+NG] = (i-1) * (Lx/(Nx-1))
+        y[i+NG, j+NG] = Ly * (0.75*((j-1)/(Ny-1))^3 + 0.25*(j-1)/(Ny-1))
     end
 end
 

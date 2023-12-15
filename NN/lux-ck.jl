@@ -8,11 +8,11 @@ dev_cpu = cpu_device()
 dev_gpu = gpu_device()
 
 # Configs
-train_epoch = 1000
-batch_size = 512
+train_epoch = 2000
+batch_size = 1024
 lr = 1f-3
-dest_lr = 1f-8
-decay_rate = 10
+decay_rate = 0.1
+decay_step = 500
 
 inputs = readdlm("input.txt", Float32)
 labels = readdlm("label.txt", Float32)
@@ -34,10 +34,10 @@ end
 rng = MersenneTwister()
 Random.seed!(rng, 12345)
 
-model = Lux.Chain(Lux.Dense(21 => 1600, gelu), 
-                  Lux.Dense(1600 => 800, gelu), 
-                  Lux.Dense(800 => 400, gelu), 
-                  Lux.Dense(400 => 19))
+model = Lux.Chain(Lux.Dense(9 => 256, gelu), 
+                  Lux.Dense(256 => 128, gelu), 
+                  Lux.Dense(128 => 64, gelu), 
+                  Lux.Dense(64 => 8))
 
 opt = Optimisers.Adam(lr)
 
@@ -52,14 +52,9 @@ tstate = Lux.Training.TrainState(rng, model, opt)
 vjp_rule = Lux.Training.AutoZygote()
 
 # define a scheduler
-function exp_scheduler(epoch, max_epoch, lr, dest_lr, decay_rate)
-	if (epoch < 100)
-	    lr_new = lr
-	else
-	    lr_new = max(lr * exp(-decay_rate * epoch / max_epoch), dest_lr)
-	end
-
-	return lr_new
+function exp_scheduler(epoch, decay_step, lr, decay_rate)
+	lr *= decay_rate^(cld(epoch, decay_step)-1)
+	return lr
 end
 
 loss_all = Float64[]
@@ -81,7 +76,7 @@ function main(tstate::Lux.Experimental.TrainState, vjp, epochs)
         printstyled("$(epoch)"; color=:blue, bold=true)
         print(" || Loss: ")
         printstyled("$(loss_all[epoch])\n"; color=:red)
-        Optimisers.adjust!(tstate.optimizer_state, exp_scheduler(epoch, train_epoch, lr, dest_lr, decay_rate))
+        Optimisers.adjust!(tstate.optimizer_state, exp_scheduler(epoch, decay_step, lr, decay_rate))
 
         if (epoch % 10 == 0)
             plot(loss_all, yscale=:log10, lw = 2, show=true, lab="loss")
