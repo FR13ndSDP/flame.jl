@@ -8,7 +8,7 @@ Toy code for compression corner with lux NN model for real gas and chemical reac
 
 ## Roadmap
 - [x] Proper viscous
-- [ ] Species transport
-- [ ] Integrate Cantera and Lux
+- [x] Species transport
+- [x] Integrate Cantera and Lux
 - [ ] 3D and MPI
 - [ ] Shuffle and stream optimization
