@@ -33,7 +33,7 @@ function copyOld(Un, U, Nx, Ny, NG, NV)
         return
     end
     for n = 1:NV
-        Un[i, j, n] = U[i, j, n]
+        @inbounds Un[i, j, n] = U[i, j, n]
     end
     return
 end
@@ -46,7 +46,7 @@ function linComb(U, Un, Nx, Ny, NG, NV, a::Float64, b::Float64)
         return
     end
     for n = 1:NV
-        U[i, j, n] = U[i, j, n] * a + Un[i, j, n] * b
+        @inbounds U[i, j, n] = U[i, j, n] * a + Un[i, j, n] * b
     end
     return
 end

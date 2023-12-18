@@ -67,14 +67,14 @@ function split(ρi, Q, U, Fp, Fm, Ax, Ay, Nx, Ny, NG)
         return
     end
 
-    ρ = Q[i, j, 1]
-    u = Q[i, j, 2]
-    v = Q[i, j, 3]
-    p = Q[i, j, 4]
-    c = Q[i, j, 6]
-    ei = U[i, j, 4] - 0.5 * ρ * (u^2 + v^2)
-    A1 = Ax[i, j]
-    A2 = Ay[i, j]
+    @inbounds ρ = Q[i, j, 1]
+    @inbounds u = Q[i, j, 2]
+    @inbounds v = Q[i, j, 3]
+    @inbounds p = Q[i, j, 4]
+    @inbounds c = Q[i, j, 6]
+    @inbounds ei = U[i, j, 4] - 0.5 * ρ * (u^2 + v^2)
+    @inbounds A1 = Ax[i, j]
+    @inbounds A2 = Ay[i, j]
 
     γ = p/ei + 1
 
@@ -100,8 +100,8 @@ function split(ρi, Q, U, Fp, Fm, Ax, Ay, Nx, Ny, NG)
     tmp2 = 2 * (γ - 1)
 
     for n = 1:Nspecs
-        Fp[i, j, n] = tmp1 * (tmp2 * E1P + E2P + E3P) * ρi[i, j, n]
-        Fm[i, j, n] = tmp1 * (tmp2 * E1M + E2M + E3M) * ρi[i, j, n]
+        @inbounds Fp[i, j, n] = tmp1 * (tmp2 * E1P + E2P + E3P) * ρi[i, j, n]
+        @inbounds Fm[i, j, n] = tmp1 * (tmp2 * E1M + E2M + E3M) * ρi[i, j, n]
     end
     return
 end

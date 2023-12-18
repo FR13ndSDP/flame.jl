@@ -7,7 +7,7 @@ using Lux, JLD2
 # Validation
 # Call Cantera
 mech = "./air.yaml"
-TPY = 5500, 3596, "N2:77 O2:23"
+TPY = 3200, 0.2*101325, "N2:77 O2:23"
 ct = pyimport("cantera")
 ct_gas = ct.Solution(mech)
 ct_gas.TPY = TPY
@@ -76,6 +76,7 @@ println("Max relative error for T: $max_err")
 gr()
 p1 = plot([T_evo T_evo_ct], w = 1, lab = ["predict-T" "cantera-T"], ls=[:dot :solid], lw = 2)
 p2 = plot([P_evo P_evo_ct], w = 1, lab = ["predict-P" "cantera-P"], ls=[:dot :solid], lw = 2)
-p3 = plot([Y_evo[:, :]' Y_evo_ct[:, :]'], ls=[:dot :solid], lw = 2, lab=nothing)
+p3 = plot(Y_evo[:, :]', ls=:solid, lw = 2, lab=nothing)
+p3 = plot!(Y_evo_ct[:, :]', ls=:dot, lw = 2, lab=nothing)
 
 plot(p1, p2, p3, layout=@layout([a; b; c]), size=(800,800))

@@ -56,22 +56,22 @@ function fillSpec(ρi, U, NG, Nx, Ny)
 
     if i <= 10
         for n = 1:Nspecs
-            ρi[i, j, n] = 0
+            @inbounds ρi[i, j, n] = 0
         end
-        ρi[i, j, 2] = 0.035651512619407424 * 0.233
-        ρi[i, j, 7] = 0.035651512619407424 * 0.767
+        @inbounds ρi[i, j, 2] = 0.035651512619407424 * 0.233
+        @inbounds ρi[i, j, 7] = 0.035651512619407424 * 0.767
     elseif i > Nx + NG -1
         for n = 1:Nspecs
-            ρi[i, j, n] = ρi[Nx+NG-1, j, n]
+            @inbounds ρi[i, j, n] = ρi[Nx+NG-1, j, n]
         end
     else
         if j <= NG+1
             for n = 1:Nspecs
-                ρi[i, j, n] = ρi[i, NG+2, n]
+                @inbounds ρi[i, j, n] = ρi[i, NG+2, n]
             end
         elseif j > Ny+NG-1
             for n = 1:Nspecs
-                ρi[i, j, n] = ρi[i, Ny+NG-1, n]
+                @inbounds ρi[i, j, n] = ρi[i, Ny+NG-1, n]
             end
         end
     end

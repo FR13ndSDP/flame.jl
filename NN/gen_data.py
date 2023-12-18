@@ -4,27 +4,31 @@ import json
 import random
 from rich.progress import track
 
-m = 10000 # number of reactions
+m = 1000 # number of reactions
 s_uniform = 100 # number of uniform sample points
 T_input = []
 P_input = []
 Y_input = np.zeros((10000000,8)) # make it large enough
 Y_label = np.zeros((10000000,8)) # make it large enough
 T_label = []
+dt = 1e-6
+lamda = 0.1
+steps = 1000
 
 y_index = 0
 for i in track(range(m), description="gen data..."):
     # sample point distribution
-    sample = random.sample(range(1,1000), s_uniform)
+    sample = random.sample(range(1,steps), s_uniform)
 
     # Data range
     T = np.random.uniform(300, 6000)
-    P = np.random.uniform(0.01*ct.one_atm, 0.3*ct.one_atm)
+    P = np.random.uniform(0.02*ct.one_atm, 0.3*ct.one_atm)
 
-    Y = np.zeros(8)
+    Y = np.random.uniform(0, 1e-3, (8))
     Y[6] = np.random.uniform(0.76, 0.79)
     Y[1] = np.random.uniform(0.21, 0.24)
-    Y[7] = 1-Y[6]-Y[1]
+    Y[7] = 0
+    Y /= sum(Y)
 
     initial_TPY = T, P, Y
 
@@ -34,13 +38,13 @@ for i in track(range(m), description="gen data..."):
     r = ct.IdealGasReactor(gas, name='R1')
     sim = ct.ReactorNet([r])
 
-    for tt in range(1, 1000):
+    for tt in range(1, steps):
         if tt in sample:
             T_input.append(np.float64(gas.T))
             P_input.append(np.float64(gas.P))
             Y_input[y_index] = np.float64(gas.Y)
 
-        sim.advance(tt*1e-6)
+        sim.advance(tt*dt)
 
         if tt in sample:
             Y_label[y_index] = np.float64(gas.Y)
@@ -68,8 +72,6 @@ n = input.shape[0]
 print("data size = ", n)
 
 # Transformation
-lamda = 0.1
-dt = 1e-6
 
 bct_input = np.zeros((n,9))
 bct_label = np.zeros((n,8))

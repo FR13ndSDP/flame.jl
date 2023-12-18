@@ -18,13 +18,13 @@ function correction(U, ρi, NG, Nx, Ny)
         return
     end
 
-    ρ = U[i, j, 1]
+    @inbounds ρ = U[i, j, 1]
     ∑ρ = 0
     for n = 1:Nspecs
-        ∑ρ += ρi[i, j, n]
+        @inbounds ∑ρ += ρi[i, j, n]
     end
     for n = 1:Nspecs
-        ρi[i, j, n] *= ρ/∑ρ
+        @inbounds ρi[i, j, n] *= ρ/∑ρ
     end
 end
 
@@ -84,16 +84,16 @@ function pre_input(inputs, inputs_norm, Q, ρi, lambda, inputs_mean, inputs_std,
         return
     end
 
-    inputs[1, (i-1)*(Ny+2*NG) + j] = Q[i, j, 5]
-    inputs[2, (i-1)*(Ny+2*NG) + j] = Q[i, j, 4]
+    @inbounds inputs[1, (i-1)*(Ny+2*NG) + j] = Q[i, j, 5]
+    @inbounds inputs[2, (i-1)*(Ny+2*NG) + j] = Q[i, j, 4]
 
     for n = 3:9
-        Yi = max(ρi[i, j, n-2]/Q[i, j, 1], 0)
-        inputs[n, (i-1)*(Ny+2*NG) + j] = (Yi^lambda - 1) / lambda
+        @inbounds Yi = max(ρi[i, j, n-2], 0)/Q[i, j, 1]
+        @inbounds inputs[n, (i-1)*(Ny+2*NG) + j] = (Yi^lambda - 1) / lambda
     end
 
     for n = 1:9
-        inputs_norm[n, (i-1)*(Ny+2*NG)+j] = (inputs[n, (i-1)*(Ny+2*NG)+j] - inputs_mean[n]) / inputs_std[n]
+        @inbounds inputs_norm[n, (i-1)*(Ny+2*NG)+j] = (inputs[n, (i-1)*(Ny+2*NG)+j] - inputs_mean[n]) / inputs_std[n]
     end
     return
 end
@@ -107,11 +107,11 @@ function post_predict(yt_pred, inputs, U, Q, ρi, dt, lambda, Nx, Ny, NG)
         return
     end
 
-    T = yt_pred[8, (i-1)*(Ny+2*NG)+j] * dt * Q[i, j, 5] + Q[i, j, 5]
-    U[i, j, 4] = Q[i, j, 1] * 287 * T /0.4 + 0.5*Q[i, j, 1] * (Q[i, j, 2]^2 + Q[i, j, 3]^2)
+    @inbounds T = yt_pred[8, (i-1)*(Ny+2*NG)+j] * dt * Q[i, j, 5] + Q[i, j, 5]
+    @inbounds U[i, j, 4] = Q[i, j, 1] * 287 * T /0.4 + 0.5*Q[i, j, 1] * (Q[i, j, 2]^2 + Q[i, j, 3]^2)
     for n = 1:Nspecs-1
-        Yi = (lambda * (yt_pred[n, (i-1)*(Ny+2*NG)+j] * dt + inputs[n+2, (i-1)*(Ny+2*NG)+j]) + 1) ^ (1/lambda)
-        ρi[i, j, n] = Yi * Q[i, j, 1]
+        @inbounds Yi = (lambda * (yt_pred[n, (i-1)*(Ny+2*NG)+j] * dt + inputs[n+2, (i-1)*(Ny+2*NG)+j]) + 1) ^ (1/lambda)
+        @inbounds ρi[i, j, n] = Yi * Q[i, j, 1]
     end
     return
 end
@@ -122,16 +122,16 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
     Un =   CUDA.zeros(Float64, Nx_tot, Ny_tot, 4)
     ρn =   CUDA.zeros(Float64, Nx_tot, Ny_tot, Nspecs)
     Q =    CUDA.zeros(Float64, Nx_tot, Ny_tot, Nprim)
-    Fp = CUDA.zeros(Float64, Nx_tot, Ny_tot, Ncons)
-    Fm = CUDA.zeros(Float64, Nx_tot, Ny_tot, Ncons)
+    Fp =   CUDA.zeros(Float64, Nx_tot, Ny_tot, Ncons)
+    Fm =   CUDA.zeros(Float64, Nx_tot, Ny_tot, Ncons)
     Fx =   CUDA.zeros(Float64, Nx-1, Ny-2, Ncons)
     Fy =   CUDA.zeros(Float64, Nx-2, Ny-1, Ncons)
     Fv_x = CUDA.zeros(Float64, Nx_tot-4, Ny_tot-4, 3)
     Fv_y = CUDA.zeros(Float64, Nx_tot-4, Ny_tot-4, 3)
     Fp_i = CUDA.zeros(Float64, Nx_tot, Ny_tot, Nspecs)
     Fm_i = CUDA.zeros(Float64, Nx_tot, Ny_tot, Nspecs)
-    Fx_i =   CUDA.zeros(Float64, Nx-1, Ny-2, Nspecs)
-    Fy_i =   CUDA.zeros(Float64, Nx-2, Ny-1, Nspecs)
+    Fx_i = CUDA.zeros(Float64, Nx-1, Ny-2, Nspecs)
+    Fy_i = CUDA.zeros(Float64, Nx-2, Ny-1, Nspecs)
 
     nthreads = (16, 16, 1)
     nblock = (cld((Nx+2*NG), 16), 
@@ -142,7 +142,6 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
     @load "./NN/luxmodel.jld2" model ps st
 
     ps = ps |> gpu_device()
-    st = st |> gpu_device()
 
     j = JSON.parsefile("./NN/norm.json")
     lambda = j["lambda"]
@@ -172,7 +171,7 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
         # Reaction Step
         @cuda threads=nthreads blocks=nblock c2Prim(U, Q, Nx, Ny, NG, 1.4, 287)
         @cuda threads=nthreads blocks=nblock pre_input(inputs, inputs_norm, Q, ρi, lambda, inputs_mean, inputs_std, Nx, Ny, NG)
-        yt_pred = Lux.apply(model, inputs_norm, ps, st)[1]
+        yt_pred = model(cu(inputs_norm), ps, st)[1]
         yt_pred = yt_pred .* labels_std .+ labels_mean
         @cuda threads=nthreads blocks=nblock post_predict(yt_pred, inputs, U, Q, ρi, dt2, lambda, Nx, Ny, NG)
         @cuda threads=nthreads blocks=nblock fillSpec(ρi, U, NG, Nx, Ny)
@@ -214,7 +213,7 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
         # Reaction Step
         @cuda threads=nthreads blocks=nblock c2Prim(U, Q, Nx, Ny, NG, 1.4, 287)
         @cuda threads=nthreads blocks=nblock pre_input(inputs, inputs_norm, Q, ρi, lambda, inputs_mean, inputs_std, Nx, Ny, NG)
-        yt_pred = Lux.apply(model, inputs_norm, ps, st)[1]
+        yt_pred = model(cu(inputs_norm), ps, st)[1]
         yt_pred = yt_pred .* labels_std .+ labels_mean
         @cuda threads=nthreads blocks=nblock post_predict(yt_pred, inputs, U, Q, ρi, dt2, lambda, Nx, Ny, NG)
         @cuda threads=nthreads blocks=nblock fillSpec(ρi, U, NG, Nx, Ny)
