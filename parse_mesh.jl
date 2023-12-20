@@ -2,82 +2,63 @@
 using JLD2
 using WriteVTK
 
-global NG::Int64 = 4
-global Nx::Int64 = 1024
-global Ny::Int64 = 256
-global Lx::Float64 = 1
-global Ly::Float64 = 0.1
-global Nx_tot::Int64 = Nx + 2*NG
-global Ny_tot::Int64 = Ny + 2*NG
+const NG::Int64 = 4
+const Nx::Int64 = 1024
+const Ny::Int64 = 256
+const Lx::Float64 = 1
+const Ly::Float64 = 0.1
+const Nx_tot::Int64 = Nx + 2*NG
+const Ny_tot::Int64 = Ny + 2*NG
 
 x = zeros(Float64, Nx_tot, Ny_tot)
 y = zeros(Float64, Nx_tot, Ny_tot)
 
-for i = 1:Nx
-    for j = 1:Ny
-        x[i+NG, j+NG] = (i-1) * (Lx/(Nx-1))
-        y[i+NG, j+NG] = Ly * (0.75*((j-1)/(Ny-1))^3 + 0.25*(j-1)/(Ny-1))
-    end
+for j ∈ 1:Ny, i ∈ 1:Nx
+    x[i+NG, j+NG] = (i-1) * (Lx/(Nx-1))
+    y[i+NG, j+NG] = Ly * (0.75*((j-1)/(Ny-1))^3 + 0.25*(j-1)/(Ny-1))
 end
 
 # get ghost location
-for i = 1:NG
-    for j = NG+1:Ny+NG
-        x[i, j] = 2*x[NG+1, j] - x[2*NG+2-i, j]
-        y[i, j] = 2*y[NG+1, j] - y[2*NG+2-i, j]
-    end
+for j ∈ NG+1:Ny+NG, i ∈ 1:NG
+    x[i, j] = 2*x[NG+1, j] - x[2*NG+2-i, j]
+    y[i, j] = 2*y[NG+1, j] - y[2*NG+2-i, j]
 end
 
-for i = Nx+NG+1:Nx+2*NG
-    for j = NG+1:Ny+NG
-        x[i, j] = 2*x[Nx+NG, j] - x[2*NG+2*Nx-i, j]
-        y[i, j] = 2*y[Nx+NG, j] - y[2*NG+2*Nx-i, j]
-    end
+for j ∈ NG+1:Ny+NG, i ∈ Nx+NG+1:Nx+2*NG
+    x[i, j] = 2*x[Nx+NG, j] - x[2*NG+2*Nx-i, j]
+    y[i, j] = 2*y[Nx+NG, j] - y[2*NG+2*Nx-i, j]
 end
 
-for i = NG+1:Nx+NG
-    for j = 1:NG
-        x[i, j] = 2*x[i, NG+1] - x[i, 2*NG+2-j]
-        y[i, j] = 2*y[i, NG+1] - y[i, 2*NG+2-j]
-    end
+for j ∈ 1:NG, i ∈ NG+1:Nx+NG
+    x[i, j] = 2*x[i, NG+1] - x[i, 2*NG+2-j]
+    y[i, j] = 2*y[i, NG+1] - y[i, 2*NG+2-j]
 end
 
-for i = NG+1:Nx+NG
-    for j = Ny+NG+1:Ny+2*NG
-        x[i, j] = 2*x[i, Ny+NG] - x[i, 2*NG+2*Ny-j]
-        y[i, j] = 2*y[i, Ny+NG] - y[i, 2*NG+2*Ny-j]
-    end
+for j ∈ Ny+NG+1:Ny+2*NG, i ∈ NG+1:Nx+NG
+    x[i, j] = 2*x[i, Ny+NG] - x[i, 2*NG+2*Ny-j]
+    y[i, j] = 2*y[i, Ny+NG] - y[i, 2*NG+2*Ny-j]
 end
 
 #corner ghost
-for i = 1:NG
-    for j = Ny+NG+1:Ny+2*NG
-        x[i, j] = x[i, Ny+NG] + x[NG+1, j] - x[NG+1, Ny+NG]
-        y[i, j] = y[i, Ny+NG] + y[NG+1, j] - y[NG+1, Ny+NG]
-    end
+for j ∈ Ny+NG+1:Ny+2*NG, i ∈ 1:NG
+    x[i, j] = x[i, Ny+NG] + x[NG+1, j] - x[NG+1, Ny+NG]
+    y[i, j] = y[i, Ny+NG] + y[NG+1, j] - y[NG+1, Ny+NG]
 end
 
-for i = 1:NG
-    for j = 1:NG
-        x[i, j] = x[i, NG+1] + x[NG+1, j] - x[NG+1, NG+1]
-        y[i, j] = y[i, NG+1] + y[NG+1, j] - y[NG+1, NG+1]
-    end
+for j ∈ 1:NG, i ∈ 1:NG
+    x[i, j] = x[i, NG+1] + x[NG+1, j] - x[NG+1, NG+1]
+    y[i, j] = y[i, NG+1] + y[NG+1, j] - y[NG+1, NG+1]
 end
 
-for i = Nx+NG+1:Nx+2*NG
-    for j = Ny+NG+1:Ny+2*NG
-        x[i, j] = x[i, Ny+NG] + x[Nx+NG, j] - x[Nx+NG, Ny+NG]
-        y[i, j] = y[i, Ny+NG] + y[Nx+NG, j] - y[Nx+NG, Ny+NG]
-    end
+for j ∈ Ny+NG+1:Ny+2*NG, i ∈ Nx+NG+1:Nx+2*NG
+    x[i, j] = x[i, Ny+NG] + x[Nx+NG, j] - x[Nx+NG, Ny+NG]
+    y[i, j] = y[i, Ny+NG] + y[Nx+NG, j] - y[Nx+NG, Ny+NG]
 end
 
-for i = Nx+NG+1:Nx+2*NG
-    for j = 1:NG
-        x[i, j] = x[i, NG+1] + x[Nx+NG, j] - x[Nx+NG, NG+1]
-        y[i, j] = y[i, NG+1] + y[Nx+NG, j] - y[Nx+NG, NG+1]
-    end
+for j ∈ 1:NG, i ∈ Nx+NG+1:Nx+2*NG
+    x[i, j] = x[i, NG+1] + x[Nx+NG, j] - x[Nx+NG, NG+1]
+    y[i, j] = y[i, NG+1] + y[Nx+NG, j] - y[Nx+NG, NG+1]
 end
-
 
 # compute jacobian
 function CD6(f)
@@ -107,50 +88,38 @@ dξdy = zeros(Float64, Nx_tot, Ny_tot)
 dηdy = zeros(Float64, Nx_tot, Ny_tot)
 J  = zeros(Float64, Nx_tot, Ny_tot)
 
-for i = 4:Nx_tot-3
-    for j = 1:Ny_tot
-        dxdξ[i, j] = CD6(x[i-3:i+3, j])
-        dydξ[i, j] = CD6(y[i-3:i+3, j])
-    end
+for j ∈ 1:Ny_tot, i ∈ 4:Nx_tot-3
+    dxdξ[i, j] = CD6(x[i-3:i+3, j])
+    dydξ[i, j] = CD6(y[i-3:i+3, j])
 end
 
-for i = 1:Nx_tot
-    for j = 4:Ny_tot-3
-        dxdη[i, j] = CD6(x[i, j-3:j+3])
-        dydη[i, j] = CD6(y[i, j-3:j+3])
-    end
+for j ∈ 4:Ny_tot-3, i ∈ 1:Nx_tot
+    dxdη[i, j] = CD6(x[i, j-3:j+3])
+    dydη[i, j] = CD6(y[i, j-3:j+3])
 end
 
 # boundary
-for i = 1:3
-    for j = 1:Ny_tot
-        dxdξ[i, j] = CD2_L(x[i:i+2, j])
-        dydξ[i, j] = CD2_L(y[i:i+2, j])
-    end
+for j ∈ 1:Ny_tot, i ∈ 1:3
+    dxdξ[i, j] = CD2_L(x[i:i+2, j])
+    dydξ[i, j] = CD2_L(y[i:i+2, j])
 end
 
-for i = Nx_tot-2:Nx_tot
-    for j = 1:Ny_tot
-        dxdξ[i, j] = CD2_R(x[i-2:i, j])
-        dydξ[i, j] = CD2_R(y[i-2:i, j])
-    end
+for j ∈ 1:Ny_tot, i ∈ Nx_tot-2:Nx_tot
+    dxdξ[i, j] = CD2_R(x[i-2:i, j])
+    dydξ[i, j] = CD2_R(y[i-2:i, j])
 end
 
-for i = 1:Nx_tot
-    for j = 1:3
-        dxdη[i, j] = CD2_L(x[i, j:j+2])
-        dydη[i, j] = CD2_L(y[i, j:j+2])
-    end
+for j ∈ 1:3, i ∈ 1:Nx_tot
+    dxdη[i, j] = CD2_L(x[i, j:j+2])
+    dydη[i, j] = CD2_L(y[i, j:j+2])
 end
 
-for i = 1:Nx+2*NG
-    for j = Ny-2:Ny+2*NG
-        dxdη[i, j] = CD2_R(x[i, j-2:j])
-        dydη[i, j] = CD2_R(y[i, j-2:j])
-    end
+for j ∈ Ny-2:Ny+2*NG, i ∈ 1:Nx+2*NG
+    dxdη[i, j] = CD2_R(x[i, j-2:j])
+    dydη[i, j] = CD2_R(y[i, j-2:j])
 end
 
-J = 1 ./ (dxdξ.*dydη - dxdη.*dydξ)
+J = @. 1 / (dxdξ*dydη - dxdη*dydξ)
 
 # actually after * J⁻
 dξdx = dydη

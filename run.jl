@@ -7,7 +7,7 @@ import Adapt
 
 # global variables, do not change name
 const dt::Float64 = 1e-8
-const Time::Float64 = 1e-4
+const Time::Float64 = 1e-6
 const Nspecs::Int64 = 8 # number of species
 const Ncons::Int64 = 4 # ρ ρu ρv E 
 const Nprim::Int64 = 6 # ρ u v p T c 
@@ -45,10 +45,8 @@ function initialize(U, mech)
     U[:, :, 2] .= ρ * u
     U[:, :, 3] .= 0.0
     U[:, :, 4] .= P/(1.4-1) + 0.5 * ρ * u^2
-    for i = 1:Nx+2*NG
-        for j = 1:Ny+2*NG
-            ρi[i, j, :] .= gas.Y .* ρ
-        end
+    for j ∈ 1:Ny+2*NG, i ∈ 1:Nx+2*NG
+        ρi[i, j, :] .= gas.Y .* ρ
     end
 end
 
@@ -90,8 +88,8 @@ copyto!(ρi, ρi_d)
 rho = U[:, :, 1]
 u =   U[:, :, 2]./rho
 v =   U[:, :, 3]./rho
-p =  (U[:, :, 4] - 0.5.*rho.*(u.^2+v.^2)) * 0.4
-T = p./(287.0 .* rho)
+p =  @. (U[:, :, 4] - 0.5*rho*(u^2+v^2)) * 0.4
+T = @. p/(287.0 * rho)
 
 O =   ρi[:, :, 1]
 O2 =  ρi[:, :, 2]

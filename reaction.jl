@@ -193,7 +193,7 @@ end
         t1 = tmin + (tmax - tmin) / (emax - emin) * (ein - emin);
     end
   
-    for i = 1:maxiter
+    for i ∈ 1:maxiter
         e1 = InternalEnergy(t1, ρi, thermo, tmp)
         cv = CV(t1, ρi, thermo, tmp)
 
@@ -225,13 +225,13 @@ function initThermo(mech, Nspecs)
     conductivity_poly = zeros(Float64, Nspecs, 5)
     binarydiffusion_poly = zeros(Float64, Nspecs, Nspecs, 5)
 
-    for i = 1:Nspecs
+    for i ∈ 1:Nspecs
         coeffs_sep[i] = gas.species(i-1).thermo.coeffs[1]
         coeffs_hi[i, :] = gas.species(i-1).thermo.coeffs[2:8]
         coeffs_lo[i, :] = gas.species(i-1).thermo.coeffs[9:end]
         viscosity_poly[i, :] = gas.get_viscosity_polynomial(i-1)
         conductivity_poly[i, :] = gas.get_thermal_conductivity_polynomial(i-1)
-        for j = 1:Nspecs
+        for j ∈ 1:Nspecs
             binarydiffusion_poly[i, j, :] = gas.get_binary_diff_coeffs_polynomial(i-1, j-1)
         end
     end

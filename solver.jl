@@ -172,7 +172,7 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
         @cuda threads=nthreads blocks=nblock c2Prim(U, Q, Nx, Ny, NG, 1.4, 287)
         @cuda threads=nthreads blocks=nblock pre_input(inputs, inputs_norm, Q, ρi, lambda, inputs_mean, inputs_std, Nx, Ny, NG)
         yt_pred = model(cu(inputs_norm), ps, st)[1]
-        yt_pred = yt_pred .* labels_std .+ labels_mean
+        yt_pred = @. yt_pred * labels_std + labels_mean
         @cuda threads=nthreads blocks=nblock post_predict(yt_pred, inputs, U, Q, ρi, dt2, lambda, Nx, Ny, NG)
         @cuda threads=nthreads blocks=nblock fillSpec(ρi, U, NG, Nx, Ny)
         @cuda threads=nthreads blocks=nblock fillGhost(U, NG, Nx, Ny)
@@ -214,7 +214,7 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
         @cuda threads=nthreads blocks=nblock c2Prim(U, Q, Nx, Ny, NG, 1.4, 287)
         @cuda threads=nthreads blocks=nblock pre_input(inputs, inputs_norm, Q, ρi, lambda, inputs_mean, inputs_std, Nx, Ny, NG)
         yt_pred = model(cu(inputs_norm), ps, st)[1]
-        yt_pred = yt_pred .* labels_std .+ labels_mean
+        yt_pred = @. yt_pred * labels_std + labels_mean
         @cuda threads=nthreads blocks=nblock post_predict(yt_pred, inputs, U, Q, ρi, dt2, lambda, Nx, Ny, NG)
         @cuda threads=nthreads blocks=nblock fillSpec(ρi, U, NG, Nx, Ny)
         @cuda threads=nthreads blocks=nblock fillGhost(U, NG, Nx, Ny)
