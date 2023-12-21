@@ -9,8 +9,6 @@
 
 using MPI
 using HDF5
-using StaticArrays
-MPI.Init()
 
 const Nx::Int64 = 256
 const Ny::Int64 = 256
@@ -20,6 +18,12 @@ const Nproc_y::Int64 = 2
 const Nghost::Int64 = 1
 const root::Int64 = 0
 const Iperiodic = (false, false)
+
+# calculate local indices w/o ghost cells
+const lo = [1+Nghost,1+Nghost]
+const hi = [Nx ÷ Nproc_x+Nghost, Ny ÷ Nproc_y+Nghost]
+const lo_g = [1, 1]
+const hi_g = [hi[1]+Nghost, hi[2]+Nghost]
 
 function laplacian(ϕ, ϕn, lo, hi)
     for j ∈ lo[2]:hi[2], i ∈ lo[1]:hi[1]
@@ -60,62 +64,52 @@ function exchange_ghost(ϕ, comm_cart, comm, lo, hi, lo_g, hi_g)
     status = MPI.Sendrecv!(sendbuf, recvbuf, comm; dest=dst, source=src)
 end
 
-comm = MPI.COMM_WORLD
-rank = MPI.Comm_rank(comm)
-Nprocs = MPI.Comm_size(comm)
+function run()
+    MPI.Init()
 
-if Nprocs != Nproc_x * Nproc_y
-    error("Not correct processes")
-end
-comm_cart = MPI.Cart_create(comm, [Nproc_x, Nproc_y]; periodic=Iperiodic)
+    comm = MPI.COMM_WORLD
+    rank = MPI.Comm_rank(comm)
+    Nprocs = MPI.Comm_size(comm)
+    nIter = 10000
 
-# calculate local indices w/o ghost cells
-lo = [1+Nghost,1+Nghost]
-hi = [Nx ÷ Nproc_x+Nghost, Ny ÷ Nproc_y+Nghost]
-lo_g = [1, 1]
-hi_g = [hi[1]+Nghost, hi[2]+Nghost]
+    if Nprocs != Nproc_x * Nproc_y
+        error("Not correct processes")
+    end
+    comm_cart = MPI.Cart_create(comm, [Nproc_x, Nproc_y]; periodic=Iperiodic)
 
-# initialize
-ϕn = ones(Float64, hi_g[1], hi_g[2])
-ϕ = ones(Float64, hi_g[1], hi_g[2])
-# fill boundary
-fill_boundary(ϕ, rank, Nproc_x)
-
-laplacian(ϕ, ϕn, lo, hi)
-
-exchange_data(ϕ, ϕn)
-
-exchange_ghost(ϕ, comm_cart, comm, lo, hi, lo_g, hi_g)
-
-MPI.Barrier(comm)
-
-fill_boundary(ϕ, rank, Nproc_x)
-
-@time for n = 1:50000
-    laplacian(ϕ, ϕn, lo, hi)
-
-    exchange_data(ϕ, ϕn)
-
-    exchange_ghost(ϕ, comm_cart, comm, lo, hi, lo_g, hi_g)
-
-    MPI.Barrier(comm)
-
+    # initialize
+    ϕn = ones(Float64, hi_g[1], hi_g[2])
+    ϕ = ones(Float64, hi_g[1], hi_g[2])
+    # fill boundary
     fill_boundary(ϕ, rank, Nproc_x)
+
+    @time for n ∈ 1:nIter
+        laplacian(ϕ, ϕn, lo, hi)
+
+        exchange_data(ϕ, ϕn)
+
+        exchange_ghost(ϕ, comm_cart, comm, lo, hi, lo_g, hi_g)
+
+        MPI.Barrier(comm)
+
+        fill_boundary(ϕ, rank, Nproc_x)
+    end
+
+    ϕng = @view ϕ[lo[1]:hi[1], lo[2]:hi[2]] # remove ghost
+    h5open("test.h5", "w", comm) do f
+        dset = create_dataset(
+            f,
+            "/phi",
+            datatype(Float64),
+            dataspace(hi[1]-Nghost, hi[2]-Nghost, Nprocs);
+            chunk=(hi[1]-Nghost, hi[2]-Nghost, 1),
+            dxpl_mpio=:collective
+        )
+        dset[:, :, rank + 1] = ϕng
+    end
+
+    MPI.Finalize()
 end
 
-ϕng = @view ϕ[lo[1]:hi[1], lo[2]:hi[2]] # remove ghost
-h5open("test.h5", "w", comm) do f
-    dset = create_dataset(
-        f,
-        "/phi",
-        datatype(Float64),
-        dataspace(hi[1]-Nghost, hi[2]-Nghost, Nprocs);
-        chunk=(hi[1]-Nghost, hi[2]-Nghost, 1),
-        dxpl_mpio=:collective
-    )
-    dset[:, :, rank + 1] = ϕng
-end
-
-MPI.Finalize()
-
+run()
 
