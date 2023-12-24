@@ -57,7 +57,7 @@ function WENO_x(F, Fp, Fm, NG, Nx, Ny, NV)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V2-V4)^2
         s33 = tmp1*(V3-2*V4+V5)^2 + 0.25*(3*V3-4*V4+V5)^2
 
-        τ = abs(s11-s33)
+        τ = CUDA.abs(s11-s33)
         # s11 = 1/(eps+s11)^2
         # s22 = 1/(eps+s22)^2
         # s33 = 1/(eps+s33)^2
@@ -85,7 +85,7 @@ function WENO_x(F, Fp, Fm, NG, Nx, Ny, NV)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V4-V2)^2
         s33 = tmp1*(V3-2*V2+V1)^2 + 0.25*(3*V3-4*V2+V1)^2
 
-        τ = abs(s11-s33)
+        τ = CUDA.abs(s11-s33)
         # s11 = 1/(eps+s11)^2
         # s22 = 1/(eps+s22)^2
         # s33 = 1/(eps+s33)^2
@@ -132,7 +132,7 @@ function WENO_y(F, Fp, Fm, NG, Nx, Ny, NV)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V2-V4)^2
         s33 = tmp1*(V3-2*V4+V5)^2 + 0.25*(3*V3-4*V4+V5)^2
 
-        τ = abs(s11-s33)
+        τ = CUDA.abs(s11-s33)
         # s11 = 1/(eps+s11)^2
         # s22 = 1/(eps+s22)^2
         # s33 = 1/(eps+s33)^2
@@ -160,7 +160,7 @@ function WENO_y(F, Fp, Fm, NG, Nx, Ny, NV)
         s22 = tmp1*(V2-2*V3+V4)^2 + 0.25*(V4-V2)^2
         s33 = tmp1*(V3-2*V2+V1)^2 + 0.25*(3*V3-4*V2+V1)^2
 
-        τ = abs(s11-s33)
+        τ = CUDA.abs(s11-s33)
         # s11 = 1/(eps+s11)^2
         # s22 = 1/(eps+s22)^2
         # s33 = 1/(eps+s33)^2

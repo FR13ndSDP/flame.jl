@@ -7,7 +7,7 @@ import Adapt
 
 # global variables, do not change name
 const dt::Float64 = 1e-8
-const Time::Float64 = 1e-6
+const Time::Float64 = 1e-4
 const Nspecs::Int64 = 8 # number of species
 const Ncons::Int64 = 4 # ρ ρu ρv E 
 const Nprim::Int64 = 6 # ρ u v p T c 
@@ -61,7 +61,7 @@ dηdx_d = CuArray(dηdx)
 dηdy_d = CuArray(dηdy)
 J_d = CuArray(J)
 
-time_step(U_d, ρi_d, dξdx_d, dξdy_d, dηdx_d, dηdy_d, J_d, Nx, Ny, NG, dt)
+@time time_step(U_d, ρi_d, dξdx_d, dξdy_d, dηdx_d, dηdy_d, J_d, Nx, Ny, NG, dt)
 copyto!(U, U_d)
 copyto!(ρi, ρi_d)
 
@@ -88,7 +88,7 @@ copyto!(ρi, ρi_d)
 rho = U[:, :, 1]
 u =   U[:, :, 2]./rho
 v =   U[:, :, 3]./rho
-p =  @. (U[:, :, 4] - 0.5*rho*(u^2+v^2)) * 0.4
+p = @. (U[:, :, 4] - 0.5*rho*(u^2+v^2)) * 0.4
 T = @. p/(287.0 * rho)
 
 O =   ρi[:, :, 1]

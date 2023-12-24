@@ -14,14 +14,15 @@ Y1 = CUDA.ones(Float32, 400, 1024*1024)
 Y2 = CUDA.ones(Float32, 200, 1024*1024)
 Y3 = CUDA.ones(Float32, 8, 1024*1024)
 
+# Zero GPU allocation
 function evalModel(Y1, Y2, Y3, w1, w2, w3, b1, b2, b3, input)
     mul!(Y1, w1, input)
     Y1 .+= b1
-    Y1 = gelu(Y1)
+    @. Y1 = gelu(Y1)
 
     mul!(Y2, w2, Y1)
     Y2 .+= b2
-    Y2 = gelu(Y2)
+    @. Y2 = gelu(Y2)
 
     mul!(Y3, w3, Y2)
     Y3 .+= b3

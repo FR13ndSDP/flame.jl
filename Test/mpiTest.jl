@@ -37,10 +37,6 @@ function fill_boundary(ϕ, rank, Nproc_x)
     end
 end
 
-function exchange_data(ϕ, ϕn)
-    ϕ .= ϕn
-end
-
 function exchange_ghost(ϕ, comm_cart, comm, lo, hi, lo_g, hi_g)
     # exchange boundary
     src, dst = MPI.Cart_shift(comm_cart, 0, 1)
@@ -78,15 +74,15 @@ function run()
     comm_cart = MPI.Cart_create(comm, [Nproc_x, Nproc_y]; periodic=Iperiodic)
 
     # initialize
-    ϕn = ones(Float64, hi_g[1], hi_g[2])
     ϕ = ones(Float64, hi_g[1], hi_g[2])
     # fill boundary
     fill_boundary(ϕ, rank, Nproc_x)
+    ϕn = copy(ϕ)
 
-    @time for n ∈ 1:nIter
+    @time for _ ∈ 1:nIter
         laplacian(ϕ, ϕn, lo, hi)
 
-        exchange_data(ϕ, ϕn)
+        ϕ, ϕn = ϕn, ϕ
 
         exchange_ghost(ϕ, comm_cart, comm, lo, hi, lo_g, hi_g)
 

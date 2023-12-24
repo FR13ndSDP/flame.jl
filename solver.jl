@@ -119,8 +119,9 @@ end
 function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
     Nx_tot = Nx+2*NG
     Ny_tot = Ny+2*NG
-    Un =   CUDA.zeros(Float64, Nx_tot, Ny_tot, 4)
-    ρn =   CUDA.zeros(Float64, Nx_tot, Ny_tot, Nspecs)
+
+    Un = copy(U)
+    ρn = copy(ρi)
     Q =    CUDA.zeros(Float64, Nx_tot, Ny_tot, Nprim)
     Fp =   CUDA.zeros(Float64, Nx_tot, Ny_tot, Ncons)
     Fm =   CUDA.zeros(Float64, Nx_tot, Ny_tot, Ncons)
@@ -156,7 +157,7 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
     dt1 = dt
     dt2 = dt/2
 
-    for tt = 1:cld(Time, dt)
+    for tt ∈ 1:ceil(Int, Time/dt)
         if tt % 100 == 0
             printstyled("Step: ", color=:cyan)
             print("$tt")
@@ -172,7 +173,7 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
         @cuda threads=nthreads blocks=nblock c2Prim(U, Q, Nx, Ny, NG, 1.4, 287)
         @cuda threads=nthreads blocks=nblock pre_input(inputs, inputs_norm, Q, ρi, lambda, inputs_mean, inputs_std, Nx, Ny, NG)
         yt_pred = model(cu(inputs_norm), ps, st)[1]
-        yt_pred = @. yt_pred * labels_std + labels_mean
+        @. yt_pred = yt_pred * labels_std + labels_mean
         @cuda threads=nthreads blocks=nblock post_predict(yt_pred, inputs, U, Q, ρi, dt2, lambda, Nx, Ny, NG)
         @cuda threads=nthreads blocks=nblock fillSpec(ρi, U, NG, Nx, Ny)
         @cuda threads=nthreads blocks=nblock fillGhost(U, NG, Nx, Ny)
@@ -214,7 +215,7 @@ function time_step(U, ρi, dξdx, dξdy, dηdx, dηdy, J, Nx, Ny, NG, dt)
         @cuda threads=nthreads blocks=nblock c2Prim(U, Q, Nx, Ny, NG, 1.4, 287)
         @cuda threads=nthreads blocks=nblock pre_input(inputs, inputs_norm, Q, ρi, lambda, inputs_mean, inputs_std, Nx, Ny, NG)
         yt_pred = model(cu(inputs_norm), ps, st)[1]
-        yt_pred = @. yt_pred * labels_std + labels_mean
+        @. yt_pred = yt_pred * labels_std + labels_mean
         @cuda threads=nthreads blocks=nblock post_predict(yt_pred, inputs, U, Q, ρi, dt2, lambda, Nx, Ny, NG)
         @cuda threads=nthreads blocks=nblock fillSpec(ρi, U, NG, Nx, Ny)
         @cuda threads=nthreads blocks=nblock fillGhost(U, NG, Nx, Ny)

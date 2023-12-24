@@ -5,15 +5,15 @@ import random
 from rich.progress import track
 
 m = 1000 # number of reactions
-s_uniform = 100 # number of uniform sample points
+s_uniform = 1000 # number of uniform sample points
 T_input = []
 P_input = []
 Y_input = np.zeros((10000000,8)) # make it large enough
 Y_label = np.zeros((10000000,8)) # make it large enough
 T_label = []
-dt = 1e-6
+dt = 1e-8
 lamda = 0.1
-steps = 1000
+steps = 10000
 
 y_index = 0
 for i in track(range(m), description="gen data..."):
@@ -24,7 +24,7 @@ for i in track(range(m), description="gen data..."):
     T = np.random.uniform(300, 6000)
     P = np.random.uniform(0.02*ct.one_atm, 0.3*ct.one_atm)
 
-    Y = np.random.uniform(0, 1e-3, (8))
+    Y = np.zeros(8)
     Y[6] = np.random.uniform(0.76, 0.79)
     Y[1] = np.random.uniform(0.21, 0.24)
     Y[7] = 0

@@ -65,12 +65,12 @@ nblock = (cld(N, 16),
 @cuda blocks=nblock threads=nthreads pre_input(input, inputs_norm, lambda, inputs_mean, inputs_std, N)
 
 @time yt_pred = Lux.apply(model, dev_gpu(inputs_norm), ps, st)[1]
-yt_pred = @. yt_pred * labels_std + labels_mean
+@. yt_pred = yt_pred * labels_std + labels_mean
 yt_pred = yt_pred |> cpu_device()
 
 
 y_pred = yt_pred[1:7, :]
-t_pred = @. yt_pred[8, :] * dt * gas.T + gas.T
+@. t_pred = yt_pred[8, :] * dt * gas.T + gas.T
 t_pred = reshape(t_pred, (N, N))
 y_pred = reshape(y_pred, (7, N, N))
 

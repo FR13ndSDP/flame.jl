@@ -119,7 +119,7 @@ for j ∈ Ny-2:Ny+2*NG, i ∈ 1:Nx+2*NG
     dydη[i, j] = CD2_R(y[i, j-2:j])
 end
 
-J = @. 1 / (dxdξ*dydη - dxdη*dydξ)
+@. J = 1 / (dxdξ*dydη - dxdη*dydξ)
 
 # actually after * J⁻
 dξdx = dydη
