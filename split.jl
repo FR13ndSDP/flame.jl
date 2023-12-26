@@ -47,15 +47,15 @@ function fluxSplit(Q, U, Fp, Fm, Nx, Ny, NG, Ax, Ay)
 
     tmp1 = ρ/(2 * γ)
     tmp2 = 2 * (γ - 1)
-    @inbounds Fp[i, j, 1] = tmp1 * (tmp2 * E1P + E2P + E3P);
+    @inbounds Fp[i, j, 1] = tmp1 * (tmp2 * E1P + E2P + E3P)
     @inbounds Fp[i, j, 2] = tmp1 * (tmp2 * E1P * u + E2P * uc1 + E3P * uc2)
     @inbounds Fp[i, j, 3] = tmp1 * (tmp2 * E1P * v + E2P * vc1 + E3P * vc2)
     @inbounds Fp[i, j, 4] = tmp1 * (E1P * vv + E2P * vvc1 + E3P * vvc2 + W2 * (E2P + E3P))
 
-    @inbounds Fm[i, j, 1] = tmp1 * (tmp2 * E1M + E2M + E3M);
-    @inbounds Fm[i, j, 2] = tmp1 * (tmp2 * E1M * u + E2M * uc1 + E3M * uc2);
-    @inbounds Fm[i, j, 3] = tmp1 * (tmp2 * E1M * v + E2M * vc1 + E3M * vc2);
-    @inbounds Fm[i, j, 4] = tmp1 * (E1M * vv + E2M * vvc1 + E3M * vvc2 + W2 * (E2M + E3M));
+    @inbounds Fm[i, j, 1] = tmp1 * (tmp2 * E1M + E2M + E3M)
+    @inbounds Fm[i, j, 2] = tmp1 * (tmp2 * E1M * u + E2M * uc1 + E3M * uc2)
+    @inbounds Fm[i, j, 3] = tmp1 * (tmp2 * E1M * v + E2M * vc1 + E3M * vc2)
+    @inbounds Fm[i, j, 4] = tmp1 * (E1M * vv + E2M * vvc1 + E3M * vvc2 + W2 * (E2M + E3M))
     return 
 end
 

@@ -65,26 +65,6 @@ J_d = CuArray(J)
 copyto!(U, U_d)
 copyto!(ρi, ρi_d)
 
-# # Include Ghost cells
-# rho = U[:, :, 1]
-# u =   U[:, :, 2]./rho
-# v =   U[:, :, 3]./rho
-# p =  (U[:, :, 4] - 0.5.*rho.*(u.^2+v.^2)) * 0.4
-# T = p./(287.0 .* rho)
-# O2 = ρi[:, :, 2]
-# N2 = ρi[:, :, 7]
-# AR = ρi[:, :, 8]
-# vtk_grid("result.vts", x, y) do vtk
-#     vtk["rho"] = rho
-#     vtk["u"] = u
-#     vtk["v"] = v
-#     vtk["p"] = p
-#     vtk["T"] = T
-#     vtk["O2"] = O2
-#     vtk["N2"] = N2
-#     vtk["AR"] = AR
-# end 
-
 rho = U[:, :, 1]
 u =   U[:, :, 2]./rho
 v =   U[:, :, 3]./rho

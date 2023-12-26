@@ -130,4 +130,9 @@ dηdy = dxdξ
 @save "metrics.jld2" NG Nx Ny dξdx dξdy dηdx dηdy J x y
 
 vtk_grid("mesh.vts", x, y) do vtk
+    vtk["J"] = J
+    vtk["dkdx"] = dξdx
+    vtk["dkdy"] = dξdy
+    vtk["dedx"] = dηdx
+    vtk["dedy"] = dηdy
 end

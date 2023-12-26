@@ -16,12 +16,14 @@ function viscousFlux(Fv_x, Fv_y, Q, NG, Nx, Ny, Pr, Cp, C_s, T_s, dξdx, dξdy, 
     @inbounds T = Q[i, j, 5]
     μ = C_s * T * CUDA.sqrt(T)/(T + T_s)
     k = Cp*μ/Pr
-    @inbounds ∂u∂ξ = 1/12*(Q[i-2, j, 2] - Q[i+2, j, 2]) - 2/3*(Q[i-1, j, 2] - Q[i+1, j, 2])
-    @inbounds ∂u∂η = 1/12*(Q[i, j-2, 2] - Q[i, j+2, 2]) - 2/3*(Q[i, j-1, 2] - Q[i, j+1, 2])
-    @inbounds ∂v∂ξ = 1/12*(Q[i-2, j, 3] - Q[i+2, j, 3]) - 2/3*(Q[i-1, j, 3] - Q[i+1, j, 3])
-    @inbounds ∂v∂η = 1/12*(Q[i, j-2, 3] - Q[i, j+2, 3]) - 2/3*(Q[i, j-1, 3] - Q[i, j+1, 3])
-    @inbounds ∂T∂ξ = 1/12*(Q[i-2, j, 5] - Q[i+2, j, 5]) - 2/3*(Q[i-1, j, 5] - Q[i+1, j, 5])
-    @inbounds ∂T∂η = 1/12*(Q[i, j-2, 5] - Q[i, j+2, 5]) - 2/3*(Q[i, j-1, 5] - Q[i, j+1, 5])
+    c1::Float64 = 1/12
+    c2::Float64 = 2/3
+    @inbounds ∂u∂ξ = c1*(Q[i-2, j, 2] - Q[i+2, j, 2]) - c2*(Q[i-1, j, 2] - Q[i+1, j, 2])
+    @inbounds ∂u∂η = c1*(Q[i, j-2, 2] - Q[i, j+2, 2]) - c2*(Q[i, j-1, 2] - Q[i, j+1, 2])
+    @inbounds ∂v∂ξ = c1*(Q[i-2, j, 3] - Q[i+2, j, 3]) - c2*(Q[i-1, j, 3] - Q[i+1, j, 3])
+    @inbounds ∂v∂η = c1*(Q[i, j-2, 3] - Q[i, j+2, 3]) - c2*(Q[i, j-1, 3] - Q[i, j+1, 3])
+    @inbounds ∂T∂ξ = c1*(Q[i-2, j, 5] - Q[i+2, j, 5]) - c2*(Q[i-1, j, 5] - Q[i+1, j, 5])
+    @inbounds ∂T∂η = c1*(Q[i, j-2, 5] - Q[i, j+2, 5]) - c2*(Q[i, j-1, 5] - Q[i, j+1, 5])
     @inbounds u = Q[i, j, 2]
     @inbounds v = Q[i, j, 3]
 

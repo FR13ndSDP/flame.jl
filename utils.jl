@@ -1,5 +1,4 @@
 include("reaction.jl")
-using StaticArrays
 
 # Range: 1 -> N+2*NG
 function c2Prim(U, Q, Nx, Ny, NG, gamma, Rg)
@@ -12,7 +11,7 @@ function c2Prim(U, Q, Nx, Ny, NG, gamma, Rg)
     @inbounds ρ = U[i, j, 1] # ρ
     @inbounds u = U[i, j, 2]/ρ # U
     @inbounds v = U[i, j, 3]/ρ # V
-    @inbounds p = CUDA.max((gamma-1) * (U[i, j, 4] - 0.5*ρ*(u*u + v*v)), CUDA.eps(Float64)) # P
+    @inbounds p = CUDA.max((gamma-1) * (U[i, j, 4] - 0.5*ρ*(u^2 + v^2)), CUDA.eps(Float64)) # P
     @inbounds T = CUDA.max(p/(Rg * ρ), CUDA.eps(Float64)) # T
     @inbounds c = CUDA.sqrt(gamma * Rg * T) # speed of sound
 
