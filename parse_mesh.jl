@@ -24,7 +24,7 @@ for j ∈ NG+1:Ny+NG, i ∈ 1:NG
     y[i, j] = 2*y[NG+1, j] - y[2*NG+2-i, j]
 end
 
-for j ∈ NG+1:Ny+NG, i ∈ Nx+NG+1:Nx+2*NG
+for j ∈ NG+1:Ny+NG, i ∈ Nx+NG+1:Nx_tot
     x[i, j] = 2*x[Nx+NG, j] - x[2*NG+2*Nx-i, j]
     y[i, j] = 2*y[Nx+NG, j] - y[2*NG+2*Nx-i, j]
 end
@@ -34,13 +34,13 @@ for j ∈ 1:NG, i ∈ NG+1:Nx+NG
     y[i, j] = 2*y[i, NG+1] - y[i, 2*NG+2-j]
 end
 
-for j ∈ Ny+NG+1:Ny+2*NG, i ∈ NG+1:Nx+NG
+for j ∈ Ny+NG+1:Ny_tot, i ∈ NG+1:Nx+NG
     x[i, j] = 2*x[i, Ny+NG] - x[i, 2*NG+2*Ny-j]
     y[i, j] = 2*y[i, Ny+NG] - y[i, 2*NG+2*Ny-j]
 end
 
 #corner ghost
-for j ∈ Ny+NG+1:Ny+2*NG, i ∈ 1:NG
+for j ∈ Ny+NG+1:Ny_tot, i ∈ 1:NG
     x[i, j] = x[i, Ny+NG] + x[NG+1, j] - x[NG+1, Ny+NG]
     y[i, j] = y[i, Ny+NG] + y[NG+1, j] - y[NG+1, Ny+NG]
 end
@@ -50,12 +50,12 @@ for j ∈ 1:NG, i ∈ 1:NG
     y[i, j] = y[i, NG+1] + y[NG+1, j] - y[NG+1, NG+1]
 end
 
-for j ∈ Ny+NG+1:Ny+2*NG, i ∈ Nx+NG+1:Nx+2*NG
+for j ∈ Ny+NG+1:Ny_tot, i ∈ Nx+NG+1:Nx_tot
     x[i, j] = x[i, Ny+NG] + x[Nx+NG, j] - x[Nx+NG, Ny+NG]
     y[i, j] = y[i, Ny+NG] + y[Nx+NG, j] - y[Nx+NG, Ny+NG]
 end
 
-for j ∈ 1:NG, i ∈ Nx+NG+1:Nx+2*NG
+for j ∈ 1:NG, i ∈ Nx+NG+1:Nx_tot
     x[i, j] = x[i, NG+1] + x[Nx+NG, j] - x[Nx+NG, NG+1]
     y[i, j] = y[i, NG+1] + y[Nx+NG, j] - y[Nx+NG, NG+1]
 end
@@ -114,7 +114,7 @@ for j ∈ 1:3, i ∈ 1:Nx_tot
     dydη[i, j] = CD2_L(y[i, j:j+2])
 end
 
-for j ∈ Ny-2:Ny+2*NG, i ∈ 1:Nx+2*NG
+for j ∈ Ny_tot-2:Ny_tot, i ∈ 1:Nx_tot
     dxdη[i, j] = CD2_R(x[i, j-2:j])
     dydη[i, j] = CD2_R(y[i, j-2:j])
 end
