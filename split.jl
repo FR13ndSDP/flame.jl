@@ -15,8 +15,9 @@ function fluxSplit(Q, U, Fp, Fm, Nx, Ny, NG, Ax, Ay)
     @inbounds A1 = Ax[i, j]
     @inbounds A2 = Ay[i, j]
 
-    γ = p/ei + 1
-
+    # γ = p/ei + 1
+    γ = 1.4
+    
     ss = CUDA.sqrt(A1*A1 + A2*A2)
     E1 = A1*u + A2*v
     E2 = E1 - c*ss
@@ -76,7 +77,8 @@ function split(ρi, Q, U, Fp, Fm, Ax, Ay, Nx, Ny, NG)
     @inbounds A1 = Ax[i, j]
     @inbounds A2 = Ay[i, j]
 
-    γ = p/ei + 1
+    # γ = p/ei + 1
+    γ = 1.4
 
     ss = CUDA.sqrt(A1*A1 + A2*A2)
     E1 = A1*u + A2*v
