@@ -23,20 +23,30 @@ function fillGhost(U, NG, Nx, Ny)
         end
     else
         if j == NG+1 
+            P2 = (gamma-1)*(U[i, j+1, 4] - 0.5/U[i, j+1, 1]*(U[i, j+1, 2]^2 + U[i, j+1, 3]^2))
+            P3 = (gamma-1)*(U[i, j+2, 4] - 0.5/U[i, j+2, 1]*(U[i, j+2, 2]^2 + U[i, j+2, 3]^2))
+            P1 = (4*P2-P3)/3  
+            @inbounds U[i, j, 1] = P1/(T_wall * Rg)
+
             @inbounds U[i, j, 2] = 0
             if i <= 40 && i >= 30
-                @inbounds U[i, j, 3] = noise * U[i, j+1, 1]
+                @inbounds U[i, j, 3] = noise * U[i, j, 1]
             else
                 @inbounds U[i, j, 3] = 0
             end
-            @inbounds U[i, j, 4] = U[i, j+1, 4] - 0.5/U[i, j+1, 1]*(U[i, j+1, 2]^2 + U[i, j+1, 3]^2)
-            @inbounds U[i, j, 1] = U[i, j, 4] * (gamma-1)/(T_wall * Rg)
-        elseif j < NG+1
-            p = (gamma-1) * (U[i, 2*NG+2-j, 4] - 0.5/U[i, 2*NG+2-j, 1]*(U[i, 2*NG+2-j, 2]^2 + U[i, 2*NG+2-j, 3]^2))
-            @inbounds U[i, j, 1] = p/(Rg * T_wall)
-            @inbounds U[i, j, 2] = -U[i, 2*NG+2-j, 2]/U[i, 2*NG+2-j, 1] * U[i, j, 1]
-            @inbounds U[i, j, 3] = -U[i, 2*NG+2-j, 3]/U[i, 2*NG+2-j, 1] * U[i, j, 1]
-            @inbounds U[i, j, 4] = p/(gamma-1) + 0.5/U[i, j, 1]*(U[i, j, 2]^2 + U[i, j, 3]^2)
+
+            @inbounds U[i, j, 4] = P1/(gamma-1) + 0.5/U[i, j, 1]*(U[i, j, 2]^2 + U[i, j, 3]^2)
+            for l = 1:NG
+                P2 = (gamma-1)*(U[i, j-l+1, 4] - 0.5/U[i, j-l+1, 1]*(U[i, j-l+1, 2]^2 + U[i, j-l+1, 3]^2))
+                P3 = (gamma-1)*(U[i, j-l+2, 4] - 0.5/U[i, j-l+2, 1]*(U[i, j-l+2, 2]^2 + U[i, j-l+2, 3]^2))
+                P1 = (4*P2-P3)/3
+                Uin = U[i, 2*NG+2-(j-l), 2]/U[i, 2*NG+2-(j-l), 1]
+                Vin = U[i, 2*NG+2-(j-l), 3]/U[i, 2*NG+2-(j-l), 1]
+                @inbounds U[i, j-l, 1] = P1/(T_wall * Rg)
+                @inbounds U[i, j-l, 2] = -U[i, j-l, 1] * Uin
+                @inbounds U[i, j-l, 3] = -U[i, j-l, 1] * Vin
+                @inbounds U[i, j-l, 4] = P1/(gamma-1) + 0.5/U[i, j-l, 1]*(U[i, j-l, 2]^2 + U[i, j-l, 3]^2)
+            end
         elseif j > Ny+NG-1
             for n = 1:4
                 @inbounds U[i, j, n] = U[i, Ny+NG-1, n]
